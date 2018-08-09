@@ -49,10 +49,13 @@ def add_consts_with_placeholder():
 def my_relu(in_value):
     """
     Implement a ReLU activation function that takes a scalar tf.placeholder as input
-    and returns the appropriate output. For more information see the assignment spec.
+    and returns the appropriate output. 
+    If negative value then return 0
+    else return unchanged 
     """
-
-    return out_value
+    if in_value < 0:
+        return 0;
+    return in_value
 
 
 def my_perceptron(x):
