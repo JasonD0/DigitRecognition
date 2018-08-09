@@ -39,6 +39,10 @@ def add_consts_with_placeholder():
     following order:
     (the resulting tensor, the constructed placeholder).
     """
+    c1 = tf.constant(5.1, dtype=tf.float32)
+    c2 = tf.constant(1.0, dtype=tf.float32)
+    c3 = tf.placeholder(dtype=tf.float32)
+    af = c1 + c2 + c3
     return af, c3
 
 
