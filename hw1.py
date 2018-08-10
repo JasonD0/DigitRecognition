@@ -80,7 +80,7 @@ def my_perceptron(x):
         # tests here
 
     """
-    i = tf.placeholder(dtype=tf.float32, shape=[x])
+    i = tf.placeholder(dtype=tf.float32, shape=[x]) #None, x
 
     tf_var = get_variable("tf_var", shape=())
     assign = tf_var.assign(1)
@@ -125,7 +125,15 @@ def onelayer(X, Y, layersize=10):
         batch_xentropy: The cross-entropy loss for each image in the batch
         batch_loss: The average cross-entropy loss of the batch
     """
-    
+    # create a dense layer 
+    w = tf.Variable(tf.zeros([784,10], name='connection_weights'))
+    b = tf.Variable(tf.zeros([layersize], name='biases'))
+    logits = tf.matmul(X,w) + b
+    preds = tf.nn.softmax(logits)
+
+    batch_xentropy = -tf.reduce_sum(Y * tf.log(preds), axis=1)
+    batch_loss = tf.reduce_mean(batch_xentropy)
+
     return w, b, logits, preds, batch_xentropy, batch_loss
 
 
