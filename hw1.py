@@ -125,8 +125,8 @@ def onelayer(X, Y, layersize=10):
         batch_loss: The average cross-entropy loss of the batch
     """
     # create a dense layer 
-    w = tf.Variable(tf.zeros([784,layersize]), name='connection_weights')
-    b = tf.Variable(tf.zeros([layersize]), name='biases')
+    w = tf.Variable(tf.zeros([784,layersize]), dtype=tf.float32, name='connection_weights')
+    b = tf.Variable(tf.zeros([layersize]), dtype=tf.float32, name='biases')
     logits = tf.matmul(X,w) + b
     preds = tf.nn.softmax(logits)
 
@@ -155,14 +155,14 @@ def twolayer(X, Y, hiddensize=30, outputsize=10):
         batch_loss: The average cross-entropy loss of the batch
     """
     # randomised and low deviation between weights to break symmetry 
-    w1 = tf.Variable(tf.random_normal([784,hiddensize], stddev=0.05), name='connection_weights1')
-    b1 = tf.Variable(tf.zeros([hiddensize]), name='biases1')
+    w1 = tf.Variable(tf.random_normal([784,hiddensize], stddev=0.05), dtype=tf.float32, name='connection_weights1')
+    b1 = tf.Variable(tf.zeros([hiddensize]), dtype=tf.float32, name='biases1')
     # calculate layer1 output
     logits0 = tf.matmul(X, w1) + b1
     preds0 = my_relu(logits0)
 
-    w2 = tf.Variable(tf.random_normal([hiddensize,outputsize], stddev=0.05), name='connection_weights2')
-    b2 = tf.Variable(tf.zeros([outputsize]), name='biases2')
+    w2 = tf.Variable(tf.random_normal([hiddensize,outputsize], stddev=0.05), dtype=tf.float32, name='connection_weights2')
+    b2 = tf.Variable(tf.zeros([outputsize]), dtype=tf.float32, name='biases2')
     # calculate layer2 output 
     logits = tf.matmul(preds0, w2) + b2 
     preds = tf.nn.softmax(logits)
