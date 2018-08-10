@@ -154,17 +154,17 @@ def twolayer(X, Y, hiddensize=30, outputsize=10):
         batch_xentropy: The cross-entropy loss for each image in the batch
         batch_loss: The average cross-entropy loss of the batch
     """
-    w1 = tf.Variable(tf.zeros([784,hiddensize]), name='connection_weights1')
+    w1 = tf.Variable(tf.random_normal([784,hiddensize], stddev=0.1), name='connection_weights1')
     b1 = tf.Variable(tf.zeros([hiddensize]), name='biases1')
-    logits = tf.matmul(X, w1) + b1
-    preds = my_relu(logits)
+    logits0 = tf.matmul(X, w1) + b1
+    preds0 = my_relu(logits0)
 
-    w2 = tf.Variable(tf.zeros([hiddensize,outputsize]), name='connection_weights2')
+    w2 = tf.Variable(tf.random_normal([hiddensize,outputsize], stddev=0.1), name='connection_weights2')
     b2 = tf.Variable(tf.zeros([outputsize]), name='biases2')
-    logits = tf.matmul(preds, w2) + b2 
+    logits = tf.matmul(preds0, w2) + b2 
     preds = tf.nn.softmax(logits)
 
-    batch_xentropy = tf.reduce_sum(Y * tf.log(preds)) * -1
+    batch_xentropy = tf.reduce_sum(Y * tf.log(preds), axis=1) * -1
     batch_loss = tf.reduce_mean(batch_xentropy)
 
     return w1, b1, w2, b2, logits, preds, batch_xentropy, batch_loss
