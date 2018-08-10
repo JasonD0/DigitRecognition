@@ -54,7 +54,7 @@ def my_relu(in_value):
     else return unchanged 
     """
     if in_value < 0:
-        return 0;
+        return 0
     return in_value
 
 
@@ -80,7 +80,15 @@ def my_perceptron(x):
         # tests here
 
     """
+    i = tf.placeholder(dtype=tf.float32, shape=[x])
 
+    tf_var = get_variable("tf_var", shape=())
+    assign = tf_var.assign(1)
+    self.sess.run(assign)
+
+    sum = tf.reduce_sum(tf.multiply(i, tf_var))
+
+    out = my_relu(sum)
     return i, out
 
 
@@ -117,7 +125,7 @@ def onelayer(X, Y, layersize=10):
         batch_xentropy: The cross-entropy loss for each image in the batch
         batch_loss: The average cross-entropy loss of the batch
     """
-
+    
     return w, b, logits, preds, batch_xentropy, batch_loss
 
 
