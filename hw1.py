@@ -78,14 +78,14 @@ def my_perceptron(x):
         # tests here
 
     """
-    i = tf.placeholder(dtype=tf.float32, shape=[x]) #None, x
+    i = tf.placeholder(dtype=tf.float32, shape=[None, x]) #None, x
 
     sess = tf.Session()
-    tf_var = tf.get_variable("tf_var", shape=())
+    tf_var = tf.get_variable("tf_var", shape=(), name='trainable_variable')
     assign = tf_var.assign(1)
     sess.run(assign)
-
-    sum = tf.reduce_sum(tf.multiply(i, tf_var))
+    b = tf.Variables(tf.zeros([x]), name='biases')
+    sum = tf.reduce_sum(tf.multiply(i, tf_var)) #+ b 
 
     out = my_relu(sum)
     return i, out
@@ -131,7 +131,7 @@ def onelayer(X, Y, layersize=10):
     preds = tf.nn.softmax(logits)
 
     # loss calculation
-    batch_xentropy = tf.reduce_sum(Y * tf.log(preds), axis=1) * -1
+    batch_xentropy = tf.reduce_sum(Y * tf.log(preds + 1e-7), axis=1) * -1
     batch_loss = tf.reduce_mean(batch_xentropy)
 
     return w, b, logits, preds, batch_xentropy, batch_loss
@@ -154,17 +154,21 @@ def twolayer(X, Y, hiddensize=30, outputsize=10):
         batch_xentropy: The cross-entropy loss for each image in the batch
         batch_loss: The average cross-entropy loss of the batch
     """
-    w1 = tf.Variable(tf.random_normal([784,hiddensize], stddev=0.1), name='connection_weights1')
+    # randomised and low deviation between weights to break symmetry 
+    w1 = tf.Variable(tf.random_normal([784,hiddensize], stddev=0.05), name='connection_weights1')
     b1 = tf.Variable(tf.zeros([hiddensize]), name='biases1')
+    # calculate layer1 output
     logits0 = tf.matmul(X, w1) + b1
     preds0 = my_relu(logits0)
 
-    w2 = tf.Variable(tf.random_normal([hiddensize,outputsize], stddev=0.1), name='connection_weights2')
+    w2 = tf.Variable(tf.random_normal([hiddensize,outputsize], stddev=0.05), name='connection_weights2')
     b2 = tf.Variable(tf.zeros([outputsize]), name='biases2')
+    # calculate layer2 output 
     logits = tf.matmul(preds0, w2) + b2 
     preds = tf.nn.softmax(logits)
 
-    batch_xentropy = tf.reduce_sum(Y * tf.log(preds), axis=1) * -1
+    # calculate loss
+    batch_xentropy = tf.reduce_sum(Y * tf.log(preds + 1e-7), axis=1) * -1
     batch_loss = tf.reduce_mean(batch_xentropy)
 
     return w1, b1, w2, b2, logits, preds, batch_xentropy, batch_loss
