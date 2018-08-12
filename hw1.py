@@ -78,16 +78,13 @@ def my_perceptron(x):
         # tests here
 
     """
-    i = tf.placeholder(dtype=tf.float32, shape=[None, x]) #None, x
-
-    sess = tf.Session()
-    tf_var = tf.get_variable("tf_var", shape=(), name='trainable_variable')
-    assign = tf_var.assign(1)
-    sess.run(assign)
-    b = tf.Variables(tf.zeros([x]), name='biases')
-    sum = tf.reduce_sum(tf.multiply(i, tf_var)) #+ b 
-
-    out = my_relu(sum)
+    i = tf.placeholder(dtype=tf.float32, shape=[x])
+    tf_var = tf.get_variable(name='tf_var', dtype=tf.float32, initializer=[1.0])
+    
+    # b = tf.Variable(tf.zeros([x]), name='biases')
+    summation = tf.reduce_sum(tf.multiply(i, tf_var))
+    out = my_relu(summation)
+    
     return i, out
 
 
@@ -125,13 +122,13 @@ def onelayer(X, Y, layersize=10):
         batch_loss: The average cross-entropy loss of the batch
     """
     # create a dense layer 
-    w = tf.Variable(tf.zeros([784,layersize]), dtype=tf.float32, name='connection_weights')
+    w = tf.Variable(tf.random_normal([784, layersize], stddev=0.1), dtype=tf.float32, name='connection_weights')
     b = tf.Variable(tf.zeros([layersize]), dtype=tf.float32, name='biases')
-    logits = tf.matmul(X,w) + b
+    logits = tf.matmul(X, w) + b
     preds = tf.nn.softmax(logits)
 
     # loss calculation
-    batch_xentropy = tf.reduce_sum(Y * tf.log(preds + 1e-7), axis=1) * -1
+    batch_xentropy = tf.reduce_sum(Y * tf.log(preds + 1e-7)) * -1
     batch_loss = tf.reduce_mean(batch_xentropy)
 
     return w, b, logits, preds, batch_xentropy, batch_loss
@@ -155,19 +152,19 @@ def twolayer(X, Y, hiddensize=30, outputsize=10):
         batch_loss: The average cross-entropy loss of the batch
     """
     # randomised and low deviation between weights to break symmetry 
-    w1 = tf.Variable(tf.random_normal([784,hiddensize], stddev=0.05), dtype=tf.float32, name='connection_weights1')
+    w1 = tf.Variable(tf.random_normal([784, hiddensize], stddev=0.05), dtype=tf.float32, name='connection_weights1')
     b1 = tf.Variable(tf.zeros([hiddensize]), dtype=tf.float32, name='biases1')
     # calculate layer1 output
     logits0 = tf.matmul(X, w1) + b1
     preds0 = my_relu(logits0)
 
-    w2 = tf.Variable(tf.random_normal([hiddensize,outputsize], stddev=0.05), dtype=tf.float32, name='connection_weights2')
+    w2 = tf.Variable(tf.random_normal([hiddensize, outputsize], stddev=0.05), dtype=tf.float32, name='connection_weights2')
     b2 = tf.Variable(tf.zeros([outputsize]), dtype=tf.float32, name='biases2')
     # calculate layer2 output 
     logits = tf.matmul(preds0, w2) + b2 
     preds = tf.nn.softmax(logits)
 
-    # calculate loss
+    # calculate loss, +1e-7 to avoid gradient explosion
     batch_xentropy = tf.reduce_sum(Y * tf.log(preds + 1e-7), axis=1) * -1
     batch_loss = tf.reduce_mean(batch_xentropy)
 
@@ -201,11 +198,13 @@ def convnet(X, Y, convlayer_sizes=[10, 10], \
     you should be able to call onelayer() to get the final layer of your network
     """
     conv1_input = tf.reshape(X, [-1, 28, 28, 1])
-    conv1 = tf.layers.conv2d(inputs=conv1_input, filters=convlayer_sizes[0], kernel_size=filter_shape, padding=padding, activation=my_relu, name='conv1')
-    conv2 = tf.layers.conv2d(inputs=conv1, filters=convlayer_sizes[1], kernel_size=filter_shape, padding=padding, activation=my_relu, name='conv2')
+    conv1 = tf.layers.conv2d(inputs=conv1_input, filters=convlayer_sizes[0], kernel_size=filter_shape, padding=padding, activation=tf.nn.relu)
+    conv2 = tf.layers.conv2d(inputs=conv1, filters=convlayer_sizes[1], kernel_size=filter_shape, padding=padding, activation=tf.nn.relu)
     
-    conv2_reshaped = tf.reshape(conv2, [-1, 784])
-    final_layer = onelayer(conv2_reshaped, Y, layersize=outputsize)
+    fully_connected_layer = tf.reshape(conv2, [-1, 28*28*1])
+
+    # problem : labels and logits(in onelayer func) not getting same number of inputs ie labels getting 256    whereas logits getting 2560
+    final_layer = onelayer(fully_connected_layer, Y, layersize=outputsize)
     w = final_layer[0]
     b = final_layer[1]
     logits = final_layer[2]
