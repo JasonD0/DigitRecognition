@@ -200,6 +200,18 @@ def convnet(X, Y, convlayer_sizes=[10, 10], \
     will be from the conv2 layer. If you reshape the conv2 output using tf.reshape,
     you should be able to call onelayer() to get the final layer of your network
     """
+    conv1_input = tf.reshape(X, [-1, 28, 28, 1])
+    conv1 = tf.layers.conv2d(inputs=conv1_input, filters=convlayer_sizes[0], kernel_size=filter_shape, padding=padding, activation=my_relu, name='conv1')
+    conv2 = tf.layers.conv2d(inputs=conv1, filters=convlayer_sizes[1], kernel_size=filter_shape, padding=padding, activation=my_relu, name='conv2')
+    
+    conv2_reshaped = tf.reshape(conv2, [-1, 784])
+    final_layer = onelayer(conv2_reshaped, Y, layersize=outputsize)
+    w = final_layer[0]
+    b = final_layer[1]
+    logits = final_layer[2]
+    preds = final_layer[3]
+    batch_xentropy = final_layer[4]
+    batch_loss = final_layer[5]
 
     return conv1, conv2, w, b, logits, preds, batch_xentropy, batch_loss
 
