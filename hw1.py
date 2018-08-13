@@ -122,7 +122,7 @@ def onelayer(X, Y, layersize=10):
         batch_loss: The average cross-entropy loss of the batch
     """
     # create a dense layer 
-    w = tf.Variable(tf.random_normal([784, layersize], stddev=0.1), dtype=tf.float32, name='connection_weights')
+    w = tf.Variable(tf.random_normal([X.get_shape().as_list()[1], layersize], stddev=0.1), dtype=tf.float32, name='connection_weights')
     b = tf.Variable(tf.zeros([layersize]), dtype=tf.float32, name='biases')
     logits = tf.matmul(X, w) + b
     preds = tf.nn.softmax(logits)
@@ -152,7 +152,7 @@ def twolayer(X, Y, hiddensize=30, outputsize=10):
         batch_loss: The average cross-entropy loss of the batch
     """
     # randomised and low deviation between weights to break symmetry 
-    w1 = tf.Variable(tf.random_normal([784, hiddensize], stddev=0.05), dtype=tf.float32, name='connection_weights1')
+    w1 = tf.Variable(tf.random_normal([X.get_shape().as_list()[1], hiddensize], stddev=0.05), dtype=tf.float32, name='connection_weights1')
     b1 = tf.Variable(tf.zeros([hiddensize]), dtype=tf.float32, name='biases1')
     # calculate layer1 output
     logits0 = tf.matmul(X, w1) + b1
@@ -165,7 +165,7 @@ def twolayer(X, Y, hiddensize=30, outputsize=10):
     preds = tf.nn.softmax(logits)
 
     # calculate loss, +1e-7 to avoid gradient explosion
-    batch_xentropy = tf.reduce_sum(Y * tf.log(preds + 1e-7), axis=1) * -1
+    batch_xentropy = tf.reduce_sum(Y * tf.log(preds + 1e-7)) * -1
     batch_loss = tf.reduce_mean(batch_xentropy)
 
     return w1, b1, w2, b2, logits, preds, batch_xentropy, batch_loss
@@ -197,20 +197,21 @@ def convnet(X, Y, convlayer_sizes=[10, 10], \
     will be from the conv2 layer. If you reshape the conv2 output using tf.reshape,
     you should be able to call onelayer() to get the final layer of your network
     """
-    conv1_input = tf.reshape(X, [-1, 28, 28, 1])
+    x = (X.get_shape().as_list()[1])**0.5
+    conv1_input = tf.reshape(X, [-1, x, x, 1])
     conv1 = tf.layers.conv2d(inputs=conv1_input, filters=convlayer_sizes[0], kernel_size=filter_shape, padding=padding, activation=tf.nn.relu)
     conv2 = tf.layers.conv2d(inputs=conv1, filters=convlayer_sizes[1], kernel_size=filter_shape, padding=padding, activation=tf.nn.relu)
     
-    fully_connected_layer = tf.reshape(conv2, [-1, 28*28*1])
+    fully_connected_layer = tf.reshape(conv2, [-1, x*x*convlayer_sizes[1]])
 
     # problem : labels and logits(in onelayer func) not getting same number of inputs ie labels getting 256    whereas logits getting 2560
-    final_layer = onelayer(fully_connected_layer, Y, layersize=outputsize)
-    w = final_layer[0]
-    b = final_layer[1]
-    logits = final_layer[2]
-    preds = final_layer[3]
-    batch_xentropy = final_layer[4]
-    batch_loss = final_layer[5]
+    fully_connected_layer = onelayer(fully_connected_layer, Y, layersize=outputsize)
+    w = fully_connected_layer[0]
+    b = fully_connected_layer[1]
+    logits = fully_connected_layer[2]
+    preds = fully_connected_layer[3]
+    batch_xentropy = fully_connected_layer[4]
+    batch_loss = fully_connected_layer[5]
 
     return conv1, conv2, w, b, logits, preds, batch_xentropy, batch_loss
 
