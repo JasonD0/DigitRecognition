@@ -198,9 +198,10 @@ def convnet(X, Y, convlayer_sizes=[10, 10], \
     you should be able to call onelayer() to get the final layer of your network
     """
     conv1_input = tf.reshape(X, [-1, 28, 28, 1])
-    conv1 = tf.layers.conv2d(inputs=conv1_input, filters=convlayer_sizes[0], kernel_size=filter_shape, padding=padding, activation=tf.nn.relu)
-    conv2 = tf.layers.conv2d(inputs=conv1, filters=convlayer_sizes[1], kernel_size=filter_shape, padding=padding, activation=tf.nn.relu)
-    
+    #conv1 = tf.layers.conv2d(inputs=conv1_input, filters=convlayer_sizes[0], kernel_size=filter_shape, padding=padding, activation=tf.nn.relu)
+    conv1 = tf.layers.conv2d(inputs=conv1_input, filters=convlayer_sizes[0], kernel_size=filter_shape, strides=(1,1), padding=padding, data_format='channels_last', dilation_rate=(1,1), activation=tf.nn.relu, use_bias=True, kernel_initializer=None, bias_initializer=tf.zeros_initializer(), kernel_regularizer=None, bias_regularizer=None, activity_regularizer=None, trainable=True, name=None, reuse=None)
+    #conv2 = tf.layers.conv2d(inputs=conv1, filters=convlayer_sizes[1], kernel_size=filter_shape, padding=padding, activation=tf.nn.relu)
+    conv2 = tf.layers.conv2d(inputs=conv1, filters=convlayer_sizes[1], kernel_size=filter_shape, strides=(1,1), padding=padding, data_format='channels_last', dilation_rate=(1,1), activation=tf.nn.relu, use_bias=True, kernel_initializer=None, bias_initializer=tf.zeros_initializer(), kernel_regularizer=None, bias_regularizer=None, activity_regularizer=None, trainable=True, name=None, reuse=None)
     fully_connected_layer = tf.reshape(conv2, [-1, 28*28*convlayer_sizes[1]])
 
     # problem : labels and logits(in onelayer func) not getting same number of inputs ie labels getting 256    whereas logits getting 2560
