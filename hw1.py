@@ -122,8 +122,11 @@ def onelayer(X, Y, layersize=10):
         batch_loss: The average cross-entropy loss of the batch
     """
     # create a dense layer 
-    w = tf.Variable(tf.random_normal([X.get_shape().as_list()[1], layersize], stddev=0.1), dtype=tf.float32, name='connection_weights')
+    # randomised and low deviation between weights to break symmetry 
+    w = tf.Variable(tf.random_normal([X.get_shape().as_list()[1], layersize], stddev=0.15), dtype=tf.float32, name='connection_weights')
     b = tf.Variable(tf.zeros([layersize]), dtype=tf.float32, name='biases')
+
+    # calculate output 
     logits = tf.matmul(X, w) + b
     preds = tf.nn.softmax(logits)
 
@@ -152,20 +155,22 @@ def twolayer(X, Y, hiddensize=30, outputsize=10):
         batch_loss: The average cross-entropy loss of the batch
     """
     # randomised and low deviation between weights to break symmetry 
-    w1 = tf.Variable(tf.random_normal([X.get_shape().as_list()[1], hiddensize], stddev=0.05), dtype=tf.float32, name='connection_weights1')
+    w1 = tf.Variable(tf.random_normal([X.get_shape().as_list()[1], hiddensize], stddev=0.15), dtype=tf.float32, name='connection_weights1')
     b1 = tf.Variable(tf.zeros([hiddensize]), dtype=tf.float32, name='biases1')
+    
     # calculate layer1 output
     logits0 = tf.matmul(X, w1) + b1
     preds0 = my_relu(logits0)
 
-    w2 = tf.Variable(tf.random_normal([hiddensize, outputsize], stddev=0.05), dtype=tf.float32, name='connection_weights2')
+    w2 = tf.Variable(tf.random_normal([hiddensize, outputsize], stddev=0.15), dtype=tf.float32, name='connection_weights2')
     b2 = tf.Variable(tf.zeros([outputsize]), dtype=tf.float32, name='biases2')
+    
     # calculate layer2 output 
     logits = tf.matmul(preds0, w2) + b2 
     preds = tf.nn.softmax(logits)
 
     # calculate loss
-    batch_xentropy = tf.reduce_sum(Y * tf.log(preds + 1e-7), axis=1) * -1
+    batch_xentropy = tf.reduce_sum(Y * tf.log(preds + 1e-7)) * -1
     batch_loss = tf.reduce_mean(batch_xentropy)
 
     return w1, b1, w2, b2, logits, preds, batch_xentropy, batch_loss
@@ -197,13 +202,11 @@ def convnet(X, Y, convlayer_sizes=[10, 10], \
     will be from the conv2 layer. If you reshape the conv2 output using tf.reshape,
     you should be able to call onelayer() to get the final layer of your network
     """
-    conv1_input = tf.reshape(X, [-1, 28, 28, 1])
-
-    conv1 = tf.layers.conv2d(inputs=conv1_input, filters=convlayer_sizes[0], kernel_size=filter_shape, padding=padding, activation=tf.nn.relu)
-    conv2 = tf.layers.conv2d(inputs=conv1, filters=convlayer_sizes[1], kernel_size=filter_shape, padding=padding, activation=tf.nn.relu)
+    conv1 = tf.layers.conv2d(inputs=X, filters=convlayer_sizes[0], kernel_size=filter_shape, strides=(2,2), padding=padding, activation=tf.nn.relu)
+    conv2 = tf.layers.conv2d(inputs=conv1, filters=convlayer_sizes[1], kernel_size=filter_shape, strides=(2,2), padding=padding, activation=tf.nn.relu)
     
-    fully_connected_layer = tf.reshape(conv2, [-1, 28*28*convlayer_sizes[1]])
-    final_layer = onelayer(fully_connected_layer, Y, layersize=outputsize)
+    fully_connected_layer = tf.reshape(conv2, [-1, 7*7*convlayer_sizes[1]])
+    final_layer = onelayer(fully_connected_layer, Y, layersize=outputsize)  
 
     w = final_layer[0]
     b = final_layer[1]
